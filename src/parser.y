@@ -131,6 +131,70 @@ CompUnit:CompUnit DeclDef {
 		}
 		;
 
+
+Stmt: LVal ASSIGN Exp SEMICOLON {
+          $$ = new StmtAST();
+          $$->sType = ASS; // 设置语句类型为赋值语句
+          $$->lVal = unique_ptr<LValAST>($1); // 左值
+          $$->exp = unique_ptr<AddExpAST>($3); // 表达式
+      }
+    | Exp SEMICOLON {
+          $$ = new StmtAST();
+          $$->sType = EXP; // 设置语句类型为表达式语句
+          $$->exp = unique_ptr<AddExpAST>($1); // 表达式
+      }
+    | SEMICOLON {
+          $$ = new StmtAST();
+          $$->sType = SEMI; // 设置语句类型为空语句
+      }
+    | Block {
+          $$ = new StmtAST();
+          $$->sType = BLK; // 设置语句类型为块语句
+          $$->block = unique_ptr<BlockAST>($1); // 块
+      }
+    | IF LP Cond RP Stmt {
+          $$ = new StmtAST();
+          $$->sType = SEL; // 设置语句类型为 if 语句
+          $$->selectStmt = make_unique<SelectStmtAST>();
+          $$->selectStmt->cond = unique_ptr<LOrExpAST>($3); // 条件表达式
+          $$->selectStmt->ifStmt = unique_ptr<StmtAST>($5); // if 分支
+      }
+    | IF LP Cond RP Stmt ELSE Stmt {
+          $$ = new StmtAST();
+          $$->sType = SEL; // 设置语句类型为 if-else 语句
+          $$->selectStmt = make_unique<SelectStmtAST>();
+          $$->selectStmt->cond = unique_ptr<LOrExpAST>($3); // 条件表达式
+          $$->selectStmt->ifStmt = unique_ptr<StmtAST>($5); // if 分支
+          $$->selectStmt->elseStmt = unique_ptr<StmtAST>($7); // else 分支
+      }
+    | WHILE LP Cond RP Stmt {
+          $$ = new StmtAST();
+          $$->sType = ITER; // 设置语句类型为 while 语句
+          $$->iterationStmt = make_unique<IterationStmtAST>();
+          $$->iterationStmt->cond = unique_ptr<LOrExpAST>($3); // 条件表达式
+          $$->iterationStmt->stmt = unique_ptr<StmtAST>($5); // 循环体
+      }
+    | BREAK SEMICOLON {
+          $$ = new StmtAST();
+          $$->sType = BRE; // 设置语句类型为 break 语句
+      }
+    | CONTINUE SEMICOLON {
+          $$ = new StmtAST();
+          $$->sType = CONT; // 设置语句类型为 continue 语句
+      }
+    | RETURN Exp SEMICOLON {
+          $$ = new StmtAST();
+          $$->sType = RET; // 设置语句类型为 return 语句
+          $$->returnStmt = make_unique<ReturnStmtAST>();
+          $$->returnStmt->exp = unique_ptr<AddExpAST>($2); // 返回值
+      }
+    | RETURN SEMICOLON {
+          $$ = new StmtAST();
+          $$->sType = RET; // 设置语句类型为 return 语句
+          $$->returnStmt = make_unique<ReturnStmtAST>();
+      }
+    ;
+	
 //声明或者函数定义
 DeclDef: Decl {
 			$$ = new DeclDefAST();
