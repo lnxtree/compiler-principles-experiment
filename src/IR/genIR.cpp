@@ -416,6 +416,27 @@ void GenIR::visit(StmtAST &ast) {
             break;
         case ASS: {
             // ******************* 代码填写处
+            Value* ltmp;
+            Value* rtmp;
+
+            requireLVal = true;
+            ast.lVal->accept(*this);
+            ltmp = recentVal;
+            ast.exp->accept(*this);
+            rtmp = recentVal;
+
+
+            //cast 
+            Type* ltype = static_cast<PointerType>(ltmp->type_).contained_;
+
+            if (ltype->tid_ == Type::FloatTyID && rtmp->type_->tid_ == Type::IntegerTyID) {
+                recentVal = builder->create_sitofp(rtmp, FLOAT_T);
+            }
+            else if (ltype->tid_ == Type::IntegerTyID && rtmp->type_->tid_ == Type:: FloatTyID) {
+                recentVal = builder->create_fptosi(rtmp, INT32_T);
+            }
+            //ass
+            builder->create_store(recentVal, ltmp);
 
 
 
